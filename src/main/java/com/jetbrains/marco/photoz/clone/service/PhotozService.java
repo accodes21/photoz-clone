@@ -1,48 +1,38 @@
 package com.jetbrains.marco.photoz.clone.service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.jetbrains.marco.photoz.clone.model.Photo;
+import com.jetbrains.marco.photoz.clone.repository.PhotozRepository;
 
 @Service
 public class PhotozService {
-    private Map<String, Photo> db = new HashMap<>() {
-        {
-            put("1", new Photo("1", "hello.jpeg"));
-        }
-    };
+    private final PhotozRepository photozRepositroy;
 
-    public Collection<Photo> get() {
-        return db.values();
-
+    public PhotozService(PhotozRepository photozRepositroy) {
+        this.photozRepositroy = photozRepositroy;
     }
 
-    public Photo get(String id) {
-        return db.get(id);
+    public Iterable<Photo> get() {
+        return photozRepositroy.findAll();
     }
 
-    public Photo remove(String id) {
-        return db.remove(id);
+    public Photo get(Integer id) {
+        return photozRepositroy.findById(id).orElse(null);
+    }
+
+    public void remove(Integer id) {
+        photozRepositroy.deleteById(id);
     }
 
     @PostMapping("/photoz")
     public Photo save(String fileName, String contentType, byte[] data) throws Throwable {
         Photo photo = new Photo();
         photo.setContentType(contentType);
-        photo.setId(UUID.randomUUID().toString());
         photo.setFileName(fileName);
         photo.setData(data);
-        db.put(photo.getId(), photo);
+        photozRepositroy.save(photo);
         return photo;
     }
 
