@@ -1,23 +1,23 @@
 package com.jetbrains.marco.photoz.clone.web;
 
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.jetbrains.marco.photoz.clone.model.Photo;
 import com.jetbrains.marco.photoz.clone.service.PhotozService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 
 @RestController
 public class PhotozController {
 
-    private PhotozService photozService;
+    private final PhotozService photozService;
 
     public PhotozController(PhotozService photozService) {
         this.photozService = photozService;
@@ -29,11 +29,18 @@ public class PhotozController {
     }
 
     @GetMapping("/photoz")
+    public String photozPage() throws IOException {
+        // Serve the HTML page as a String
+        var htmlFile = new ClassPathResource("static/photoz.html");
+        return Files.readString(htmlFile.getFile().toPath());
+    }
+
+    @GetMapping("/photoz/api")
     public Iterable<Photo> get() {
         return photozService.get();
     }
 
-    @GetMapping("/photoz/{id}")
+    @GetMapping("/photoz/api/{id}")
     public Photo get(@PathVariable Integer id) {
         Photo photo = photozService.get(id);
         if (photo == null)
@@ -41,14 +48,13 @@ public class PhotozController {
         return photo;
     }
 
-    @DeleteMapping("/photoz/{id}")
+    @DeleteMapping("/photoz/api/{id}")
     public void delete(@PathVariable Integer id) {
         photozService.remove(id);
     }
 
-    @PostMapping("/photoz")
+    @PostMapping(value = "/photoz/api", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Photo create(@RequestPart("data") MultipartFile file) throws Throwable {
         return photozService.save(file.getOriginalFilename(), file.getContentType(), file.getBytes());
     }
-
 }

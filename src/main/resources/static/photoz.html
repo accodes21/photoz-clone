@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photoz Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .gallery-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            max-width: 200px;
+        }
+        .gallery-item img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photoz Gallery</h1>
+    <div class="gallery" id="gallery">
+        Loading photos...
+    </div>
+
+    <script>
+        async function fetchPhotos() {
+            try {
+                // Fetch photos metadata
+                const response = await fetch('/photoz/api');
+                if (!response.ok) throw new Error('Failed to fetch photos');
+                
+                const photos = await response.json();
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+
+                // Populate the gallery with images
+                photos.forEach(photo => {
+                    const photoElement = document.createElement('div');
+                    photoElement.classList.add('gallery-item');
+                    photoElement.innerHTML = `
+                        <img src="/download/${photo.id}" alt="${photo.fileName}" />
+                        <p>${photo.fileName}</p>
+                    `;
+                    gallery.appendChild(photoElement);
+                });
+            } catch (error) {
+                console.error(error);
+                document.getElementById('gallery').innerHTML = '<p>Failed to load photos.</p>';
+            }
+        }
+
+        // Fetch and display photos on page load
+        fetchPhotos();
+    </script>
+</body>
+</html>
