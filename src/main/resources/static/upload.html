@@ -6,11 +6,40 @@
     <title>Upload Image</title>
 </head>
 <body>
+    <style>
+        h2{
+            display: flex;
+            justify-content: center;
+        }
+        .fileUpload{
+            display: flex;
+            justify-content: center;
+        }
+        button{
+            cursor: pointer;
+        }
+        footer{
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        a{
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            color: black;
+        }
+    </style>
     <h2>Photo Upload</h2>
 
-    <input id="fileupload" type="file" name="fileupload" />
-    <button id="upload-button" onclick="uploadFile()"> Upload </button>
+    <div class="fileUpload">
+        <input id="fileupload" type="file" name="fileupload" />
+        <button id="upload-button" onclick="uploadFile()"> Upload </button>
+    </div>
 
+    <footer>
+        <a href="/photoz.html">Home</a>
+    </footer>
     <script>
         async function uploadFile() {
             let formData = new FormData();

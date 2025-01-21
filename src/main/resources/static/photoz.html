@@ -9,6 +9,10 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
+        h1{
+            display: flex;
+            justify-content: center;
+        }
         .gallery {
             display: flex;
             flex-wrap: wrap;
@@ -19,10 +23,39 @@
             border-radius: 8px;
             padding: 10px;
             max-width: 200px;
+            text-align: center;
+            transition: all ease-in-out .2s;
+            cursor: pointer;
+        }
+        .gallery-item:hover{
+            box-shadow: #ddd 5px 5px 5px;
         }
         .gallery-item img {
             max-width: 100%;
             border-radius: 8px;
+        }
+        .gallery-item button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #f44336;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .gallery-item button:hover {
+            background-color: #d32f2f;
+        }
+        footer{
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        a{
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            color: black;
         }
     </style>
 </head>
@@ -31,6 +64,9 @@
     <div class="gallery" id="gallery">
         Loading photos...
     </div>
+    <footer>
+        <a href="/upload.html" target="_blank">Upload Image</a>
+    </footer>
 
     <script>
         async function fetchPhotos() {
@@ -38,24 +74,42 @@
                 // Fetch photos metadata
                 const response = await fetch('/photoz/api');
                 if (!response.ok) throw new Error('Failed to fetch photos');
-                
+
                 const photos = await response.json();
                 const gallery = document.getElementById('gallery');
                 gallery.innerHTML = '';
 
-                // Populate the gallery with images
+                // Populate the gallery with images and delete buttons
                 photos.forEach(photo => {
                     const photoElement = document.createElement('div');
                     photoElement.classList.add('gallery-item');
                     photoElement.innerHTML = `
                         <img src="/download/${photo.id}" alt="${photo.fileName}" />
                         <p>${photo.fileName}</p>
+                        <button onclick="deletePhoto(${photo.id})">Delete</button>
                     `;
                     gallery.appendChild(photoElement);
                 });
             } catch (error) {
                 console.error(error);
                 document.getElementById('gallery').innerHTML = '<p>Failed to load photos.</p>';
+            }
+        }
+
+        async function deletePhoto(id) {
+            try {
+                // Call the delete API endpoint
+                const response = await fetch(`/photoz/api/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error(`Failed to delete photo with ID ${id}`);
+                alert(`Photo with ID ${id} deleted successfully`);
+
+                // Refresh the gallery
+                fetchPhotos();
+            } catch (error) {
+                console.error(error);
+                alert(`Error deleting photo: ${error.message}`);
             }
         }
 
