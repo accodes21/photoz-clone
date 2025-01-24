@@ -8,15 +8,17 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f8f9fa;
         }
-        h1{
-            display: flex;
-            justify-content: center;
+        h1 {
+            text-align: center;
+            color: #333;
         }
         .gallery {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            justify-content: center;
         }
         .gallery-item {
             border: 1px solid #ddd;
@@ -24,11 +26,12 @@
             padding: 10px;
             max-width: 200px;
             text-align: center;
-            transition: all ease-in-out .2s;
+            background-color: #fff;
+            transition: all 0.2s ease-in-out;
             cursor: pointer;
         }
-        .gallery-item:hover{
-            box-shadow: #ddd 5px 5px 5px;
+        .gallery-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .gallery-item img {
             max-width: 100%;
@@ -42,20 +45,52 @@
             color: white;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
         }
         .gallery-item button:hover {
             background-color: #d32f2f;
         }
-        footer{
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
+        footer {
+            text-align: center;
+            margin-top: 2rem;
         }
-        a{
+        a {
             font-size: 16px;
             font-weight: 600;
             text-decoration: none;
-            color: black;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        #edit-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        #edit-dialog h2 {
+            margin-top: 0;
+        }
+        #edit-dialog button {
+            margin: 5px;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
         }
     </style>
 </head>
@@ -64,6 +99,13 @@
     <div class="gallery" id="gallery">
         Loading photos...
     </div>
+    <div id="overlay"></div>
+    <div id="edit-dialog">
+        <h2>Edit Photo</h2>
+        <input type="file" id="edit-file" />
+        <button onclick="editPhoto()">Save Changes</button>
+        <button onclick="closeEditDialog()">Cancel</button>
+    </div>
     <footer>
         <a href="/upload.html" target="_blank">Upload Image</a>
     </footer>
@@ -71,7 +113,6 @@
     <script>
         async function fetchPhotos() {
             try {
-                // Fetch photos metadata
                 const response = await fetch('/photoz/api');
                 if (!response.ok) throw new Error('Failed to fetch photos');
 
@@ -79,7 +120,6 @@
                 const gallery = document.getElementById('gallery');
                 gallery.innerHTML = '';
 
-                // Populate the gallery with images and delete buttons
                 photos.forEach(photo => {
                     const photoElement = document.createElement('div');
                     photoElement.classList.add('gallery-item');
@@ -87,25 +127,24 @@
                         <img src="/download/${photo.id}" alt="${photo.fileName}" />
                         <p>${photo.fileName}</p>
                         <button onclick="deletePhoto(${photo.id})">Delete</button>
+                        <button onclick="openEditDialog(${photo.id})">Edit</button>
                     `;
                     gallery.appendChild(photoElement);
                 });
             } catch (error) {
                 console.error(error);
-                document.getElementById('gallery').innerHTML = '<p>Failed to load photos.</p>';
+                document.getElementById('gallery').innerHTML = '<p>Failed to load photos. Please try again later.</p>';
             }
         }
 
         async function deletePhoto(id) {
-            try {
-                // Call the delete API endpoint
-                const response = await fetch(`/photoz/api/${id}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) throw new Error(`Failed to delete photo with ID ${id}`);
-                alert(`Photo with ID ${id} deleted successfully`);
+            if (!confirm('Are you sure you want to delete this photo?')) return;
 
-                // Refresh the gallery
+            try {
+                const response = await fetch(`/photoz/api/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error(`Failed to delete photo with ID ${id}`);
+
+                alert('Photo deleted successfully');
                 fetchPhotos();
             } catch (error) {
                 console.error(error);
@@ -113,8 +152,48 @@
             }
         }
 
-        // Fetch and display photos on page load
         fetchPhotos();
+
+        let currentPhotoId = null;
+
+        function openEditDialog(id) {
+            currentPhotoId = id;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('edit-dialog').style.display = 'block';
+        }
+
+        function closeEditDialog() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('edit-dialog').style.display = 'none';
+            currentPhotoId = null;
+        }
+
+        async function editPhoto() {
+            const fileInput = document.getElementById('edit-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('data', file);
+
+            try {
+                const response = await fetch(`/photoz/api/${currentPhotoId}`, {
+                    method: 'PUT',
+                    body: formData,
+                });
+                if (!response.ok) throw new Error('Failed to update photo');
+
+                alert('Photo updated successfully');
+                closeEditDialog();
+                fetchPhotos();
+            } catch (error) {
+                console.error(error);
+                alert('Error updating photo: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>

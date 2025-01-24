@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import org.springframework.http.HttpStatus;
 
 @RestController
+@RequestMapping("/photoz")
 public class PhotozController {
 
     private final PhotozService photozService;
@@ -28,33 +29,57 @@ public class PhotozController {
         return "Hello World";
     }
 
-    @GetMapping("/photoz")
+    @GetMapping
     public String photozPage() throws IOException {
         // Serve the HTML page as a String
         var htmlFile = new ClassPathResource("static/photoz.html");
         return Files.readString(htmlFile.getFile().toPath());
     }
 
-    @GetMapping("/photoz/api")
-    public Iterable<Photo> get() {
+    @GetMapping("/api")
+    public Iterable<Photo> getAllPhotos() {
         return photozService.get();
     }
 
-    @GetMapping("/photoz/api/{id}")
-    public Photo get(@PathVariable Integer id) {
+    @GetMapping("/api/{id}")
+    public Photo getPhoto(@PathVariable Integer id) {
         Photo photo = photozService.get(id);
-        if (photo == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (photo == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found");
+        }
         return photo;
     }
 
-    @DeleteMapping("/photoz/api/{id}")
-    public void delete(@PathVariable Integer id) {
+    @DeleteMapping("/api/{id}")
+    public void deletePhoto(@PathVariable Integer id) {
         photozService.remove(id);
     }
 
-    @PostMapping(value = "/photoz/api", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Photo create(@RequestPart("data") MultipartFile file) throws Throwable {
-        return photozService.save(file.getOriginalFilename(), file.getContentType(), file.getBytes());
+    @PostMapping(value = "/api", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Photo createPhoto(@RequestPart("data") MultipartFile file) throws IOException {
+        return photozService.save(
+                file.getOriginalFilename(),
+                file.getContentType(),
+                file.getBytes()
+        );
+    }
+
+    @PutMapping(value = "/api/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Photo updatePhoto(
+            @PathVariable Integer id,
+            @RequestPart("data") MultipartFile file
+    ) throws IOException {
+        Photo photo = photozService.get(id);
+        if (photo == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found");
+        }
+
+        // Update photo details
+        return photozService.save(
+                file.getOriginalFilename(),
+                file.getContentType(),
+                file.getBytes(),
+                id
+        );
     }
 }

@@ -1,39 +1,51 @@
 package com.jetbrains.marco.photoz.clone.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import com.jetbrains.marco.photoz.clone.model.Photo;
 import com.jetbrains.marco.photoz.clone.repository.PhotozRepository;
 
 @Service
 public class PhotozService {
-    private final PhotozRepository photozRepositroy;
+    private final PhotozRepository photozRepository;
 
-    public PhotozService(PhotozRepository photozRepositroy) {
-        this.photozRepositroy = photozRepositroy;
+    public PhotozService(PhotozRepository photozRepository) {
+        this.photozRepository = photozRepository;
     }
 
+    // Retrieve all photos
     public Iterable<Photo> get() {
-        return photozRepositroy.findAll();
+        return photozRepository.findAll();
     }
 
+    // Retrieve a specific photo by ID
     public Photo get(Integer id) {
-        return photozRepositroy.findById(id).orElse(null);
+        return photozRepository.findById(id).orElse(null);
     }
 
+    // Delete a photo by ID
     public void remove(Integer id) {
-        photozRepositroy.deleteById(id);
+        photozRepository.deleteById(id);
     }
 
-    @PostMapping("/photoz")
-    public Photo save(String fileName, String contentType, byte[] data) throws Throwable {
+    // Save a new photo
+    public Photo save(String fileName, String contentType, byte[] data) {
         Photo photo = new Photo();
         photo.setContentType(contentType);
         photo.setFileName(fileName);
         photo.setData(data);
-        photozRepositroy.save(photo);
-        return photo;
+        return photozRepository.save(photo);
     }
 
+    // Update an existing photo
+    public Photo save(String fileName, String contentType, byte[] data, Integer id) {
+        Photo photo = get(id);
+        if (photo != null) {
+            photo.setFileName(fileName);
+            photo.setContentType(contentType);
+            photo.setData(data);
+            return photozRepository.save(photo);
+        }
+        return null; // Return null if the photo doesn't exist
+    }
 }
