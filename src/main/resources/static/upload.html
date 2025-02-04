@@ -44,7 +44,7 @@
         async function uploadFile() {
             let formData = new FormData();
             formData.append("data", fileupload.files[0]);
-            await fetch('http://localhost:8080/photoz/api', {
+            await fetch('https://photoz-clone-latest.onrender.com/photoz/api', {
                 method: "POST",
                 body: formData
             }).then(result => result.text())
